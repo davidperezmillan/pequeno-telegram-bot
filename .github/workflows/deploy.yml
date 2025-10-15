@@ -1,0 +1,23 @@
+name: Deploy to Portainer
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to Portainer
+      run: |
+        echo "Triggering Portainer deployment..."
+        curl -X POST http://portainer.davidperezmillan.com/api/stacks/webhooks/c4d9b771-5795-409d-9704-3edfee7c0f73
+        echo "Deployment triggered successfully"
