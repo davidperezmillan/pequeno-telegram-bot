@@ -313,6 +313,7 @@ class MediaForwardHandler:
         # - 50-60% (mitad)
         # - 75-80% (último cuarto)
         # - 90-100% (final)
+        percentage = int(percentage)
         if (percentage >= 25 and percentage < 26) or \
            (percentage >= 50 and percentage < 51) or \
            (percentage >= 75 and percentage < 76) or \
