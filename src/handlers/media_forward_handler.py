@@ -313,9 +313,9 @@ class MediaForwardHandler:
         # - 50-60% (mitad)
         # - 75-80% (último cuarto)
         # - 90-100% (final)
-        if (percentage >= 25 and percentage < 30) or \
-           (percentage >= 50 and percentage < 60) or \
-           (percentage >= 75 and percentage < 80) or \
-           (percentage >= 90 and percentage < 100):
+        if (percentage >= 25 and percentage < 26) or \
+           (percentage >= 50 and percentage < 51) or \
+           (percentage >= 75 and percentage < 76) or \
+           (percentage >= 98 and percentage < 100):
             return True
         return False
