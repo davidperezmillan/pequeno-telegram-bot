@@ -52,6 +52,15 @@ Un bot de Telegram avanzado que procesa videos largos y genera clips aleatorios 
 - Mensajes con formato Markdown
 - Soporte de spoilers para contenido sorpresa
 
+## Documentación adicional
+
+Para información detallada sobre componentes específicos del proyecto:
+
+- [Variables de Entorno](ENV_USAGE.md) - Configuración completa de variables de entorno
+- [Sistema de Base de Datos](DATABASE_SYSTEM.md) - Arquitectura y funcionamiento de la BD
+- [Gestión de Archivos Multimedia](FILE_MANAGER_README.md) - Procesamiento de videos y clips
+- [Cliente de Mensajería de Telegram](TELEGRAM_MESSENGER.md) - Interfaz completa para envío de mensajes
+
 ---
 
 ⭐ Si te gusta este proyecto, ¡dale una estrella en GitHub!
