@@ -23,7 +23,7 @@ Un bot de Telegram avanzado que procesa videos largos y genera clips aleatorios 
 ## Instalación y uso
 
 1. Clona el repositorio
-2. Copia  a  y configura las variables
+2. Copia `.env.example` a `.env` y configura las variables
 3. Ejecuta con Docker: `docker-compose up -d`
 
 ## Estructura del proyecto
