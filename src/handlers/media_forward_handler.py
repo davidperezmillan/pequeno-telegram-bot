@@ -81,9 +81,9 @@ class MediaForwardHandler:
         # Edit the message caption to include the description
         try:
             await self.client.edit_message(
-                sent_message.id,
                 sent_message.chat_id,
-                caption=f"🖼️ **Descripción:** {description}",
+                sent_message.id,
+                text=f"🖼️ **Descripción:** {description}",
                 buttons=sent_message.buttons
             )
             self.logger.info("Caption de la imagen actualizado con descripción")
