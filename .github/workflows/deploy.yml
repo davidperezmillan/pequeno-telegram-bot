@@ -16,8 +16,42 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+name: Deploy to Portainer
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
     - name: Deploy to Portainer
       run: |
-        echo "Triggering Portainer deployment..."
-        curl -X POST http://portainer.davidperezmillan.com/api/stacks/webhooks/c4d9b771-5795-409d-9704-3edfee7c0f73
-        echo "Deployment triggered successfully"
+        echo "🚀 Iniciando despliegue automático a Portainer..."
+        echo "📅 Timestamp: $(date)"
+        echo "🔗 Webhook URL: http://portainer.davidperezmillan.com/api/stacks/webhooks/c4d9b771-5795-409d-9704-3edfee7c0f73"
+        echo "📤 Enviando petición POST al webhook..."
+        
+        # Ejecutar curl y capturar el código de respuesta
+        response=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://portainer.davidperezmillan.com/api/stacks/webhooks/c4d9b771-5795-409d-9704-3edfee7c0f73)
+        
+        echo "📊 Código de respuesta HTTP: $response"
+        
+        if [ "$response" -eq 200 ] || [ "$response" -eq 204 ]; then
+          echo "✅ Despliegue activado exitosamente en Portainer"
+          echo "⏱️  Esperando que Portainer complete el despliegue..."
+        else
+          echo "❌ Error al activar el despliegue. Código de respuesta: $response"
+          exit 1
+        fi
+        
+        echo "🎉 Proceso de despliegue completado"
