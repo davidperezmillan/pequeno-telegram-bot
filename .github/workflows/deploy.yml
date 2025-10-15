@@ -16,24 +16,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-name: Deploy to Portainer
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
     - name: Deploy to Portainer
       run: |
         echo "🚀 Iniciando despliegue automático a Portainer..."
