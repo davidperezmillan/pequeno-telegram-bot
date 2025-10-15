@@ -192,8 +192,8 @@ class MediaForwardHandler:
         async def progress_callback(current, total):
             if total > 0:
                 percentage = (current / total) * 100
-                # solo enviar actualización cada 10%
-                if percentage % 5 >= 0 and percentage % 5 < 1:
+                # Solo enviar actualización cada 10% completos
+                if percentage % 10 == 0 and percentage > 0:
                     try:
                         await self.messenger.edit_message(
                             progress_message.id,
