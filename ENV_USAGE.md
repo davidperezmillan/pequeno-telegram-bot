@@ -23,56 +23,19 @@ self.target_group_username = self._get_optional_env('TARGET_GROUP_USERNAME') # �
 ```
 **Usado en**: `src/handlers/command_handler.py` → comando `/status` para mostrar configuración del grupo
 
-#### Variables de Base de Datos:
+#### Variables Opcionales (Chats Específicos):
 ```python
-self.database_url = os.getenv('DATABASE_URL', 'sqlite:///data/bot_data.db')  # → DATABASE_URL
+# Configuración de chats específicos
+self.chat_me = self._get_optional_env('CHAT_ME', int)                      # → CHAT_ME
+self.chat_target = self._get_optional_env('CHAT_TARGET', int)              # → CHAT_TARGET
 ```
-**Usado en**: `src/database/manager.py` → inicialización de SQLite
-
-#### Variables de Directorios:
-```python
-self.temp_dir = os.getenv('TEMP_DIR', 'temp')             # → TEMP_DIR
-self.data_dir = os.getenv('DATA_DIR', 'data')             # → DATA_DIR
-self.logs_dir = os.getenv('LOGS_DIR', 'logs')             # → LOGS_DIR
-self.downloads_dir = os.getenv('DOWNLOADS_DIR', 'downloads') # → DOWNLOADS_DIR
-```
-**Usado en**: Todo el sistema para crear directorios necesarios
-
-#### Variables de Logging:
-```python
-self.log_level = os.getenv('LOG_LEVEL', 'INFO')           # → LOG_LEVEL
-self.log_file = os.getenv('LOG_FILE', 'logs/bot.log')     # → LOG_FILE
-```
-**Usado en**: `src/utils/logger.py` → configuración del sistema de logging
+**Usado en**: `src/telegram_client.py` → TelegramMessenger para envío de mensajes y notificaciones
 
 #### Variables de Procesamiento:
 ```python
-self.max_file_size_mb = int(os.getenv('MAX_FILE_SIZE_MB', '50'))      # → MAX_FILE_SIZE_MB
-self.video_quality = os.getenv('VIDEO_QUALITY', 'medium')            # → VIDEO_QUALITY
-self.image_quality = int(os.getenv('IMAGE_QUALITY', '85'))           # → IMAGE_QUALITY
+self.max_file_size_mb = self._get_optional_env('MAX_FILE_SIZE_MB', int, 20) # → MAX_FILE_SIZE_MB
 ```
-**Preparado para**: Futuras funcionalidades de procesamiento de archivos
-
-#### Variables de Notificaciones:
-```python
-self.enable_notifications = os.getenv('ENABLE_NOTIFICATIONS', 'true').lower() == 'true'  # → ENABLE_NOTIFICATIONS
-self.notification_chat_id = self._get_optional_env('NOTIFICATION_CHAT_ID', int)          # → NOTIFICATION_CHAT_ID
-```
-**Preparado para**: Sistema de notificaciones futuro
-
-#### Variables de Rate Limiting:
-```python
-self.rate_limit_messages = int(os.getenv('RATE_LIMIT_MESSAGES', '10'))  # → RATE_LIMIT_MESSAGES
-self.rate_limit_window = int(os.getenv('RATE_LIMIT_WINDOW', '60'))      # → RATE_LIMIT_WINDOW
-```
-**Preparado para**: Control de velocidad de mensajes futuro
-
-#### Variables de Desarrollo:
-```python
-self.debug_mode = os.getenv('DEBUG_MODE', 'false').lower() == 'true'   # → DEBUG_MODE
-self.dev_mode = os.getenv('DEV_MODE', 'false').lower() == 'true'       # → DEV_MODE
-```
-**Preparado para**: Modos de desarrollo y debug
+**Usado en**: Validación de tamaño de archivos multimedia
 
 ---
 
@@ -152,15 +115,17 @@ def setup_logger(name: str = "pequenoBot", level: str = None):
 
 ### 🟢 **En Uso Activo:**
 - ✅ `API_ID`, `API_HASH`, `BOT_TOKEN` - Credenciales básicas
-- ✅ `DATABASE_URL` - Base de datos SQLite
-- ✅ `LOG_LEVEL`, `LOG_FILE`, `LOGS_DIR` - Sistema de logging
 - ✅ `TARGET_GROUP_ID`, `TARGET_GROUP_USERNAME` - Configuración de grupo (opcional)
+- ✅ `CHAT_ME`, `CHAT_TARGET` - Chats específicos para mensajería
+- ✅ `DATABASE_URL` - Base de datos SQLite
+- ✅ `DATA_DIR`, `LOGS_DIR`, `DOWNLOADS_DIR`, `TEMP_DIR` - Directorios de trabajo
+- ✅ `LOG_LEVEL`, `LOG_FILE` - Sistema de logging
+- ✅ `MAX_FILE_SIZE_MB` - Límite de tamaño de archivos
 
 ### 🟡 **Preparadas para Uso Futuro:**
-- 🔶 `MAX_FILE_SIZE_MB`, `VIDEO_QUALITY`, `IMAGE_QUALITY` - Procesamiento de archivos
+- 🔶 `VIDEO_QUALITY`, `IMAGE_QUALITY` - Procesamiento de archivos
 - 🔶 `ENABLE_NOTIFICATIONS`, `NOTIFICATION_CHAT_ID` - Sistema de notificaciones
 - 🔶 `RATE_LIMIT_MESSAGES`, `RATE_LIMIT_WINDOW` - Control de velocidad
 - 🔶 `DEBUG_MODE`, `DEV_MODE` - Modos de desarrollo
-- 🔶 `TEMP_DIR`, `DATA_DIR`, `DOWNLOADS_DIR` - Directorios de trabajo
 
 El sistema está diseñado para ser extensible - todas las variables están cargadas y disponibles para cuando se implementen las funcionalidades correspondientes.
