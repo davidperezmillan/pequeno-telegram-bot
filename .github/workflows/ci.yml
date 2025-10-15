@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-syntax:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install flake8
+        
+    - name: Check Python syntax
+      run: |
+        echo "🔍 Verificando sintaxis de Python..."
+        python -m py_compile main.py
+        find src -name "*.py" -exec python -m py_compile {} \;
+        echo "✅ Sintaxis correcta - todos los archivos Python compilan sin errores"
+        
+    - name: Run linting
+      run: |
+        echo "🧹 Ejecutando linting con flake8..."
+        flake8 main.py src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 main.py src/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        echo "✅ Linting completado"

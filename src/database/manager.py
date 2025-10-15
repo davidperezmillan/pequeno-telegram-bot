@@ -302,6 +302,31 @@ class DatabaseManager:
             self.logger.error(f"Error obteniendo mensajes del chat {chat_id}: {e}")
             return []
     
+    def get_message(self, message_id: int, chat_id: int) -> Optional[Message]:
+        """
+        Obtener un mensaje específico por ID y chat
+        
+        Args:
+            message_id: ID del mensaje
+            chat_id: ID del chat
+            
+        Returns:
+            Instancia de Message o None si no existe
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM messages WHERE message_id = ? AND chat_id = ?", (message_id, chat_id))
+                row = cursor.fetchone()
+                
+                if row:
+                    return Message.from_dict(dict(row))
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error obteniendo mensaje {message_id} en chat {chat_id}: {e}")
+            return None
+    
     def get_message_stats(self) -> Dict[str, Any]:
         """Obtener estadísticas de mensajes"""
         try:

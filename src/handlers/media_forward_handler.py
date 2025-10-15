@@ -5,6 +5,8 @@ from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument, MessageMe
 from src.config import setup_logger
 from src.telegram_client import TelegramMessenger
 from src.utils.file_manager import FileManager
+from src.database.manager import DatabaseManager
+from src.database.models import Message
 
 
 class MediaForwardHandler:
@@ -14,6 +16,7 @@ class MediaForwardHandler:
         self.logger = setup_logger('MediaForwardHandler')
         self.messenger = TelegramMessenger(client, config)
         self.file_manager = FileManager()
+        self.db_manager = DatabaseManager()
       
 
     def register_handlers(self):
@@ -58,7 +61,7 @@ class MediaForwardHandler:
 
         
         # Send video with buttons to the user's chat
-        await self._replay_with_buttons(message, caption=f"**⚠️ Video largo detectado ⚠️ **\n🎬 tiempo: {file_info['file_size'] / (1024 * 1024):.2f} MB")
+        sent_message = await self._replay_with_buttons(message, caption=f"**⚠️ Video largo detectado ⚠️ **\n🎬 tiempo: {file_info['file_size'] / (1024 * 1024):.2f} MB")
 
         # Descargar el video con mensajes de progreso
         downloaded_path = await self._download_with_progress(message, file_info, reason)
@@ -68,6 +71,17 @@ class MediaForwardHandler:
             return
         
         self.logger.info(f"Video descargado exitosamente: {downloaded_path}")
+
+        # Save the file path to the sent message in database
+        message_obj = Message(
+            message_id=sent_message.id,
+            chat_id=sent_message.chat_id,
+            user_id=self.config.chat_me,
+            message_type='document',
+            media_info={'file_path': downloaded_path},
+            created_at=sent_message.date
+        )
+        self.db_manager.save_message(message_obj)
 
         # Crear 3 clips de 10 segundos aleatorios
         lClip_path, clips_creados = await self.create_clips(downloaded_path, num_clips=3, clip_duration=10)
@@ -255,15 +269,20 @@ class MediaForwardHandler:
             [
                 Button.inline("Enviar al chat destino", b"send_to_target"),
                 Button.inline("Descartar", b"discard")
+            ],
+            [
+                Button.inline("Borrar archivo", b"delete_file")
             ]
         ]
 
-        await self.client.send_file(
+        sent_message = await self.client.send_file(
             self.config.chat_me, 
             file=message.media, 
             caption=caption,
             buttons=buttons
         )
+        
+        return sent_message
     
     async def create_clips(self, downloaded_path,num_clips=3, clip_duration=10):
         lClip_path = []
@@ -292,12 +311,24 @@ class MediaForwardHandler:
                         ]
                     ]
 
-                    await self.client.send_file(
+                    sent_message = await self.client.send_file(
                         self.config.chat_me,
                         file=result,
                         parse_mode='markdown',
                         buttons=buttons
                     )
+                    
+                    # Save message with file path to database
+                    message_obj = Message(
+                        message_id=sent_message.id,
+                        chat_id=sent_message.chat_id,
+                        user_id=self.config.chat_me,
+                        message_type='document',
+                        media_info={'file_path': result},
+                        created_at=sent_message.date
+                    )
+                    self.db_manager.save_message(message_obj)
+                    
                     self.logger.info(f"Clip {i+1}/3 enviado exitosamente a chat_me")
                 except Exception as e:
                     self.logger.error(f"Error enviando clip {i+1}/3 a chat_me: {e}")    
