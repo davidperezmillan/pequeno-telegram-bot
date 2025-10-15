@@ -308,9 +308,6 @@ class MediaForwardHandler:
                         [
                             Button.inline("Enviar al chat destino", b"send_to_target"),
                             Button.inline("Descartar", b"discard")
-                        ],
-                        [
-                            Button.inline("Borrar archivo", b"delete_file")
                         ]
                     ]
 
