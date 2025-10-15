@@ -14,45 +14,80 @@ class ImageProcessor:
 
     def __init__(self):
         self.logger = setup_logger('ImageProcessor')
-        # Inicializar el pipeline de descripción de imágenes (se carga cuando se usa)
+        # Inicializar los pipelines (se cargan cuando se usan)
         self.caption_pipeline = None
+        self.translation_pipeline = None
 
     async def describe_image(self, image_path: str) -> str:
         """
-        Describe una imagen usando un modelo de Hugging Face sin censura
+        Describe una imagen usando un modelo de Hugging Face y traduce a español
 
         Args:
             image_path: Ruta de la imagen
 
         Returns:
-            str: Descripción de la imagen
+            str: Descripción de la imagen en español
         """
         try:
             self.logger.info(f"Describiendo imagen: {image_path}")
 
-            # Inicializar el pipeline si no está cargado
+            # Inicializar el pipeline de descripción si no está cargado
             if self.caption_pipeline is None:
                 self.logger.info("Cargando modelo de descripción de imágenes...")
-                # Usar un modelo de captioning sin restricciones
                 self.caption_pipeline = pipeline(
                     "image-to-text",
                     model="nlpconnect/vit-gpt2-image-captioning",
-                    device="cpu"  # Cambiar a "cuda" si hay GPU
+                    device="cpu"
                 )
 
             # Abrir imagen
             image = Image.open(image_path)
 
-            # Generar descripción
+            # Generar descripción en inglés
             result = self.caption_pipeline(image)
-            description = result[0]['generated_text'] if result else "No se pudo generar descripción"
+            english_description = result[0]['generated_text'] if result else "No se pudo generar descripción"
 
-            self.logger.info(f"Descripción generada: {description}")
-            return description
+            self.logger.info(f"Descripción en inglés: {english_description}")
+
+            # Traducir a español
+            spanish_description = await self._translate_to_spanish(english_description)
+
+            self.logger.info(f"Descripción en español: {spanish_description}")
+            return spanish_description
 
         except Exception as e:
             self.logger.error(f"Error describiendo imagen {image_path}: {e}")
             return f"Error al describir la imagen: {str(e)}"
+
+    async def _translate_to_spanish(self, text: str) -> str:
+        """
+        Traduce texto del inglés al español
+
+        Args:
+            text: Texto en inglés
+
+        Returns:
+            str: Texto en español
+        """
+        try:
+            # Inicializar el pipeline de traducción si no está cargado
+            if self.translation_pipeline is None:
+                self.logger.info("Cargando modelo de traducción inglés-español...")
+                self.translation_pipeline = pipeline(
+                    "translation",
+                    model="Helsinki-NLP/opus-mt-en-es",
+                    device="cpu"
+                )
+
+            # Traducir
+            result = self.translation_pipeline(text)
+            translated = result[0]['translation_text'] if result else text
+
+            return translated
+
+        except Exception as e:
+            self.logger.error(f"Error traduciendo texto: {e}")
+            return text  # Devolver original si falla la traducción
 
     async def process_image(self, input_path: str, output_path: str = None,
                           max_size: tuple = (1920, 1080), quality: int = 85,
