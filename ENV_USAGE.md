@@ -115,14 +115,19 @@ def setup_logger(name: str = "pequenoBot", level: str = None):
 
 ### 🟢 **En Uso Activo:**
 - ✅ `API_ID`, `API_HASH`, `BOT_TOKEN` - Credenciales básicas
-- ✅ `TARGET_GROUP_ID`, `TARGET_GROUP_USERNAME` - Configuración de grupo (opcional)
 - ✅ `CHAT_ME`, `CHAT_TARGET` - Chats específicos para mensajería
 - ✅ `DATABASE_URL` - Base de datos SQLite
-- ✅ `DATA_DIR`, `LOGS_DIR`, `DOWNLOADS_DIR`, `TEMP_DIR` - Directorios de trabajo
+- ✅ `DOWNLOADS_DIR` - Directorio para descargas
 - ✅ `LOG_LEVEL`, `LOG_FILE` - Sistema de logging
 - ✅ `MAX_FILE_SIZE_MB` - Límite de tamaño de archivos
 
+### 🟡 **Con Valores por Defecto:**
+- 🔶 `DATA_DIR` (default: 'data') - Directorio de datos
+- 🔶 `LOGS_DIR` (default: 'logs') - Directorio de logs  
+- 🔶 `TEMP_DIR` (default: 'temp') - Directorio temporal
+
 ### 🟡 **Preparadas para Uso Futuro:**
+- 🔶 `TARGET_GROUP_ID`, `TARGET_GROUP_USERNAME` - Configuración de grupo (opcional)
 - 🔶 `VIDEO_QUALITY`, `IMAGE_QUALITY` - Procesamiento de archivos
 - 🔶 `ENABLE_NOTIFICATIONS`, `NOTIFICATION_CHAT_ID` - Sistema de notificaciones
 - 🔶 `RATE_LIMIT_MESSAGES`, `RATE_LIMIT_WINDOW` - Control de velocidad

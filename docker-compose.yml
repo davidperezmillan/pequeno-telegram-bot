@@ -7,10 +7,14 @@ services:
       - API_ID=${API_ID}
       - API_HASH=${API_HASH}
       - BOT_TOKEN=${BOT_TOKEN}
+      - CHAT_ME=${CHAT_ME}          # Chat donde el bot enviará mensajes de estado
+      - CHAT_TARGET=${CHAT_TARGET}  # Chat objetivo donde el bot enviará contenido
+      - MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB} # Tamaño máximo de archivo en MB
+      - LOG_LEVEL=${LOG_LEVEL}        # Nivel de logging
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./downloads:/app/downloads
+      - ${DOWNLOADS_DIR}:/app/downloads
     networks:
       - pequeno-bot-net
 

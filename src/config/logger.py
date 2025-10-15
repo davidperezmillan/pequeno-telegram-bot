@@ -44,7 +44,7 @@ def setup_logger(name: str = "pequenoBot", level: str = None) -> logging.Logger:
     )
     
     # Handler para archivo - usar variable de entorno LOG_FILE
-    log_file_path = os.getenv('LOG_FILE', 'logs/bot.log')
+    log_file_path = 'logs/bot.log'
     log_file = Path(log_file_path)
     
     # Crear directorio del archivo de log si no existe
