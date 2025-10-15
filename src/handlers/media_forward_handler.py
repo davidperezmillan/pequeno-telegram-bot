@@ -192,6 +192,7 @@ class MediaForwardHandler:
         async def progress_callback(current, total):
             if total > 0:
                 percentage = (current / total) * 100
+                self.logger.debug(f"Progreso de descarga: {percentage:.1f}% ({current}/{total} bytes)")
                 if self._send_notif_process(percentage):
                     try:
                         await self.messenger.edit_message(
