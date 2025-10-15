@@ -192,18 +192,20 @@ class MediaForwardHandler:
         async def progress_callback(current, total):
             if total > 0:
                 percentage = (current / total) * 100
-                try:
-                    await self.messenger.edit_message(
-                        progress_message.id,
-                        f"📥 Descargando...\n📊 Progreso: {percentage:.1f}%\n📏 {current/(1024*1024):.1f}MB / {total/(1024*1024):.1f}MB\n📝 {reason}",
-                        chat_id=self.config.chat_me,
-                        parse_mode='md'
-                    )
-                    
-                except Exception as e:
-                    # Silenciar errores de edición de mensaje (pueden ocurrir por límites de tiempo o permisos)
-                    self.logger.debug(f"No se pudo actualizar progreso: {e}")
-                    pass
+                # solo enviar actualización cada 10%
+                if percentage % 5 >= 0 and percentage % 5 < 1:
+                    try:
+                        await self.messenger.edit_message(
+                            progress_message.id,
+                            f"📥 Descargando...\n📊 Progreso: {percentage:.1f}%\n📏 {current/(1024*1024):.1f}MB / {total/(1024*1024):.1f}MB\n📝 {reason}",
+                            chat_id=self.config.chat_me,
+                            parse_mode='md'
+                        )
+                        
+                    except Exception as e:
+                        # Silenciar errores de edición de mensaje (pueden ocurrir por límites de tiempo o permisos)
+                        self.logger.debug(f"No se pudo actualizar progreso: {e}")
+                        pass
         
         # Descargar el archivo con callback de progreso
         self.logger.info(f"Descargando archivo: {reason}")
