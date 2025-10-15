@@ -192,8 +192,7 @@ class MediaForwardHandler:
         async def progress_callback(current, total):
             if total > 0:
                 percentage = (current / total) * 100
-                # Solo enviar actualización cada 10% completos
-                if percentage % 10 == 0 and percentage > 0:
+                if self._send_notif_process(percentage):
                     try:
                         await self.messenger.edit_message(
                             progress_message.id,
@@ -305,3 +304,17 @@ class MediaForwardHandler:
             else:
                 self.logger.error(f"Error creando clip {i+1}/3: {result}")
         return lClip_path, clips_creados
+    
+
+    def _send_notif_process(self, percentage):
+        # solo enviar actualización si el proceso esta entre:
+        # - 25-30% (primer cuarto)
+        # - 50-60% (mitad)
+        # - 75-80% (último cuarto)
+        # - 90-100% (final)
+        if (percentage >= 25 and percentage < 30) or \
+           (percentage >= 50 and percentage < 60) or \
+           (percentage >= 75 and percentage < 80) or \
+           (percentage >= 90 and percentage < 100):
+            return True
+        return False
