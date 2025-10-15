@@ -1,0 +1,19 @@
+services:
+ pequeno_bot:
+    build: .
+    container_name: pequeno_bot
+    restart: unless-stopped
+    environment:
+      - API_ID=${API_ID}
+      - API_HASH=${API_HASH}
+      - BOT_TOKEN=${BOT_TOKEN}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./downloads:/app/downloads
+    networks:
+      - pequeno-bot-net
+
+networks:
+  pequeno-bot-net:
+    driver: bridge
