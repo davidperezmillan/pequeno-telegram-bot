@@ -75,23 +75,38 @@ class MediaForwardHandler:
         
         self.logger.info(f"Imagen descargada: {downloaded_path}")
 
-        # Describe the image using AI (in Spanish)
-        description = await self.image_processor.describe_image(downloaded_path)
+        # Describe the image using AI (first in English)
+        english_description = await self._get_english_description(downloaded_path)
         
-        # Edit the message caption to include the description
+        # Edit message with English description
         try:
             await self.client.edit_message(
                 sent_message.chat_id,
                 sent_message.id,
-                text=f"🖼️ **Descripción:** {description}",
+                text=f"🖼️ **Descripción (EN):** {english_description}\n🔄 Traduciendo al español...",
                 buttons=sent_message.buttons
             )
-            self.logger.info("Caption de la imagen actualizado con descripción")
+            self.logger.info("Mensaje actualizado con descripción en inglés")
         except Exception as e:
-            self.logger.error(f"Error editando caption: {e}")
+            self.logger.error(f"Error editando mensaje con descripción EN: {e}")
+
+        # Translate to Spanish
+        spanish_description = await self.image_processor._translate_to_spanish(english_description)
+        
+        # Edit message with final Spanish description
+        try:
+            await self.client.edit_message(
+                sent_message.chat_id,
+                sent_message.id,
+                text=f"🖼️ **Descripción:** {spanish_description}",
+                buttons=sent_message.buttons
+            )
+            self.logger.info("Mensaje actualizado con descripción en español")
+        except Exception as e:
+            self.logger.error(f"Error editando mensaje final: {e}")
             # Fallback: send description as separate message
             await self.messenger.send_notification_to_me(
-                f"📝 **Descripción de la imagen:**\n{description}",
+                f"📝 **Descripción de la imagen:**\n{spanish_description}",
                 parse_mode='md'
             )
 
@@ -119,6 +134,36 @@ class MediaForwardHandler:
 
         # Delete the image from the original chat
         await self.messenger.delete_message(message.id, message.chat_id)
+
+    async def _get_english_description(self, image_path: str) -> str:
+        """Get English description without translation."""
+        try:
+            self.logger.info(f"Generando descripción en inglés: {image_path}")
+
+            # Initialize caption pipeline if needed
+            if self.image_processor.caption_pipeline is None:
+                self.logger.info("Cargando modelo de descripción de imágenes...")
+                from transformers import pipeline
+                self.image_processor.caption_pipeline = pipeline(
+                    "image-to-text",
+                    model="nlpconnect/vit-gpt2-image-captioning",
+                    device="cpu"
+                )
+
+            # Open image
+            from PIL import Image
+            image = Image.open(image_path)
+
+            # Generate description
+            result = self.image_processor.caption_pipeline(image)
+            description = result[0]['generated_text'] if result else "No se pudo generar descripción"
+
+            self.logger.info(f"Descripción en inglés generada: {description}")
+            return description
+
+        except Exception as e:
+            self.logger.error(f"Error generando descripción en inglés {image_path}: {e}")
+            return "Error al generar descripción"
 
     
 
