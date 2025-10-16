@@ -7,7 +7,7 @@ from src.telegram_client import TelegramMessenger
 from src.utils.file_manager import FileManager
 from src.database.manager import DatabaseManager
 from src.database.models import Message
-from src.utils.image_processor import ImageProcessor
+from src.utils.image_description_service import ImageDescriptionService
 
 
 class MediaForwardHandler:
@@ -18,7 +18,7 @@ class MediaForwardHandler:
         self.messenger = TelegramMessenger(client, config)
         self.file_manager = FileManager()
         self.db_manager = DatabaseManager()
-        self.image_processor = ImageProcessor()
+        self.image_description_service = ImageDescriptionService()
       
 
     def register_handlers(self):
@@ -75,30 +75,27 @@ class MediaForwardHandler:
         
         self.logger.info(f"Imagen descargada: {downloaded_path}")
 
-        # Describe the image using AI (first in English)
-        english_description = await self._get_english_description(downloaded_path)
+        # Generate descriptions using the description service
+        descriptions = await self.image_description_service.describe_image(downloaded_path)
         
         # Edit message with English description
         try:
             await self.client.edit_message(
                 sent_message.chat_id,
                 sent_message.id,
-                text=f"🖼️ **Descripción (EN):** {english_description}\n🔄 Traduciendo al español...",
+                text=f"🖼️ **Descripción (EN):** {descriptions['english']}\n🔄 Traduciendo al español...",
                 buttons=sent_message.buttons
             )
             self.logger.info("Mensaje actualizado con descripción en inglés")
         except Exception as e:
             self.logger.error(f"Error editando mensaje con descripción EN: {e}")
 
-        # Translate to Spanish
-        spanish_description = await self.image_processor._translate_to_spanish(english_description)
-        
         # Edit message with final Spanish description
         try:
             await self.client.edit_message(
                 sent_message.chat_id,
                 sent_message.id,
-                text=f"🖼️ **Descripción:** {spanish_description}",
+                text=f"🖼️ **Descripción (EN):** {descriptions['english']}\n🖼️ **Descripción:** {descriptions['spanish']}",
                 buttons=sent_message.buttons
             )
             self.logger.info("Mensaje actualizado con descripción en español")
@@ -106,12 +103,12 @@ class MediaForwardHandler:
             self.logger.error(f"Error editando mensaje final: {e}")
             # Fallback: send description as separate message
             await self.messenger.send_notification_to_me(
-                f"📝 **Descripción de la imagen:**\n{spanish_description}",
+                f"📝 **Descripción de la imagen:**\n{descriptions['spanish']}",
                 parse_mode='md'
             )
 
-        # Process the image (resize if large)
-        processed_path = await self.image_processor.process_image(
+        # Process the image (resize if large) using the description service
+        processed_path = await self.image_description_service.process_image_file(
             downloaded_path, 
             max_size=(1920, 1080),
             quality=85
@@ -134,36 +131,6 @@ class MediaForwardHandler:
 
         # Delete the image from the original chat
         await self.messenger.delete_message(message.id, message.chat_id)
-
-    async def _get_english_description(self, image_path: str) -> str:
-        """Get English description without translation."""
-        try:
-            self.logger.info(f"Generando descripción en inglés: {image_path}")
-
-            # Initialize caption pipeline if needed
-            if self.image_processor.caption_pipeline is None:
-                self.logger.info("Cargando modelo de descripción de imágenes...")
-                from transformers import pipeline
-                self.image_processor.caption_pipeline = pipeline(
-                    "image-to-text",
-                    model="nlpconnect/vit-gpt2-image-captioning",
-                    device="cpu"
-                )
-
-            # Open image
-            from PIL import Image
-            image = Image.open(image_path)
-
-            # Generate description
-            result = self.image_processor.caption_pipeline(image)
-            description = result[0]['generated_text'] if result else "No se pudo generar descripción"
-
-            self.logger.info(f"Descripción en inglés generada: {description}")
-            return description
-
-        except Exception as e:
-            self.logger.error(f"Error generando descripción en inglés {image_path}: {e}")
-            return "Error al generar descripción"
 
     
 
