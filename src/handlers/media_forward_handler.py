@@ -76,7 +76,8 @@ class MediaForwardHandler:
         self.logger.info(f"Imagen descargada: {downloaded_path}")
 
         # Generate descriptions using the description service
-        descriptions = await self.image_description_service.describe_image(downloaded_path)
+        ## descriptions = await self.image_description_service.describe_image_joy_local(downloaded_path)
+        descriptions = await self.image_description_service.describe_image_blip_local(downloaded_path)
         
         # Edit message with English description
         try:
@@ -95,7 +96,7 @@ class MediaForwardHandler:
             await self.client.edit_message(
                 sent_message.chat_id,
                 sent_message.id,
-                text=f"🖼️ **Descripción (EN):** {descriptions['english']}\n🖼️ **Descripción:** {descriptions['spanish']}",
+                text=f"🖼️ **Descripción (EN):** {descriptions['english']}\n🖼️ **Descripción:** {descriptions['spanish']}\n🤖 **Modelo:** {descriptions['model_used']}",
                 buttons=sent_message.buttons
             )
             self.logger.info("Mensaje actualizado con descripción en español")

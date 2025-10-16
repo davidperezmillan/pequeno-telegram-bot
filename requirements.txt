@@ -10,3 +10,8 @@ transformers==4.35.2
 torch==2.1.1
 numpy<2
 sentencepiece==0.1.99
+huggingface_hub==0.19.4
+openai>=1.0.0
+
+
+
