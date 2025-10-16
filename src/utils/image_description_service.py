@@ -267,9 +267,9 @@ class ImageDescriptionService:
             # Genera la caption con parámetros para mayor longitud y diversidad
             outputs = model.generate(
                 **inputs,
-                max_new_tokens=100,  # aumenta máximo tokens para texto más largo
+                max_new_tokens=1000,  # aumenta máximo tokens para texto más largo
                 num_beams=5,          # usa beam search para mejor calidad
-                temperature=0.7,      # controla diversidad y creatividad
+                temperature=0.9,      # controla diversidad y creatividad
                 early_stopping=True
             )
             description = processor.decode(outputs[0], skip_special_tokens=True)
