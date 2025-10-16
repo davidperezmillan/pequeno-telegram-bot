@@ -7,6 +7,7 @@ from src.telegram_client import TelegramMessenger
 from src.utils.file_manager import FileManager
 from src.database.manager import DatabaseManager
 from src.database.models import Message
+from src.utils.image_description_service import ImageDescriptionService
 
 
 class MediaForwardHandler:
@@ -17,6 +18,7 @@ class MediaForwardHandler:
         self.messenger = TelegramMessenger(client, config)
         self.file_manager = FileManager()
         self.db_manager = DatabaseManager()
+        self.image_description_service = ImageDescriptionService()
       
 
     def register_handlers(self):
@@ -29,7 +31,7 @@ class MediaForwardHandler:
                 if message_type in [ 'video', 'animation']:
                    await self._process_video(event.message)
                 elif message_type in ['image']:
-                    await self.messenger.send_notification_to_me("recuperamos una imagen", parse_mode='md')
+                    await self._process_image(event.message)
                 elif message_type == 'text':
                     await self.messenger.send_notification_to_me("recuperamos un texto", parse_mode='md')
                 elif message_type == 'sticker':
@@ -54,6 +56,81 @@ class MediaForwardHandler:
 
         # Delete the video from the original chat
         await self.messenger.delete_message(message.id,message.chat_id)
+
+    
+
+    async def _process_image(self, message):
+        """Process image messages."""
+        file_info = self._get_file_info(message)
+        
+        # Send image with initial caption to the user's chat
+        sent_message = await self._replay_with_buttons(message, caption="🖼️ Procesando imagen...")
+
+        # Download the image
+        downloaded_path = await self.messenger.download_media_from_message(message)
+        
+        if not downloaded_path:
+            self.logger.error("Error al descargar la imagen")
+            return
+        
+        self.logger.info(f"Imagen descargada: {downloaded_path}")
+
+        # Generate descriptions using the description service
+        descriptions = await self.image_description_service.describe_image(downloaded_path)
+        
+        # Edit message with English description
+        try:
+            await self.client.edit_message(
+                sent_message.chat_id,
+                sent_message.id,
+                text=f"🖼️ **Descripción (EN):** {descriptions['english']}\n🔄 Traduciendo al español...",
+                buttons=sent_message.buttons
+            )
+            self.logger.info("Mensaje actualizado con descripción en inglés")
+        except Exception as e:
+            self.logger.error(f"Error editando mensaje con descripción EN: {e}")
+
+        # Edit message with final Spanish description
+        try:
+            await self.client.edit_message(
+                sent_message.chat_id,
+                sent_message.id,
+                text=f"🖼️ **Descripción (EN):** {descriptions['english']}\n🖼️ **Descripción:** {descriptions['spanish']}",
+                buttons=sent_message.buttons
+            )
+            self.logger.info("Mensaje actualizado con descripción en español")
+        except Exception as e:
+            self.logger.error(f"Error editando mensaje final: {e}")
+            # Fallback: send description as separate message
+            await self.messenger.send_notification_to_me(
+                f"📝 **Descripción de la imagen:**\n{descriptions['spanish']}",
+                parse_mode='md'
+            )
+
+        # Process the image (resize if large) using the description service
+        processed_path = await self.image_description_service.process_image_file(
+            downloaded_path, 
+            max_size=(1920, 1080),
+            quality=85
+        )
+
+        # Save the file path to the sent message in database
+        message_obj = Message(
+            message_id=sent_message.id,
+            chat_id=sent_message.chat_id,
+            user_id=self.config.chat_me,
+            message_type='photo',
+            media_info={'file_path': processed_path},
+            created_at=sent_message.date
+        )
+        self.db_manager.save_message(message_obj)
+
+        # Clean up original downloaded file if different from processed
+        if processed_path != downloaded_path:
+            await self.file_manager.cleanup_files([downloaded_path])
+
+        # Delete the image from the original chat
+        await self.messenger.delete_message(message.id, message.chat_id)
 
     
 
