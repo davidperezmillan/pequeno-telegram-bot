@@ -29,7 +29,7 @@ class pequenoBot:
         self.command_handler = CommandHandler(self.client, self.config)
 
         # inicializar callback
-        self.callback_handler = CallbackHandler(self.client, self.config)
+        self.callback_handler = CallbackHandler(self.client, self.config, self.media_forward_handler)
         
         # Inicializar cliente de mensajería
         self.messenger = TelegramMessenger(self.client, self.config)

@@ -76,7 +76,8 @@ class MediaForwardHandler:
         self.logger.info(f"Imagen descargada: {downloaded_path}")
 
         # Generate descriptions using the description service
-        descriptions = await self.image_description_service.describe_image(downloaded_path)
+        ## descriptions = await self.image_description_service.describe_image_joy_local(downloaded_path)
+        descriptions = await self.image_description_service.describe_image_blip_local(downloaded_path)
         
         # Edit message with English description
         try:
@@ -95,7 +96,7 @@ class MediaForwardHandler:
             await self.client.edit_message(
                 sent_message.chat_id,
                 sent_message.id,
-                text=f"🖼️ **Descripción (EN):** {descriptions['english']}\n🖼️ **Descripción:** {descriptions['spanish']}",
+                text=f"🖼️ **Descripción (EN):** {descriptions['english']}\n🖼️ **Descripción:** {descriptions['spanish']}\n🤖 **Modelo:** {descriptions['model_used']}",
                 buttons=sent_message.buttons
             )
             self.logger.info("Mensaje actualizado con descripción en español")
@@ -138,7 +139,7 @@ class MediaForwardHandler:
 
         
         # Send video with buttons to the user's chat
-        sent_message = await self._replay_with_buttons(message, caption=f"**⚠️ Video largo detectado ⚠️ **\n🎬 tiempo: {file_info['file_size'] / (1024 * 1024):.2f} MB")
+        sent_message = await self._replay_long_video_with_buttons(message, caption=f"**⚠️ Video largo detectado ⚠️ **\n🎬 tiempo: {file_info['file_size'] / (1024 * 1024):.2f} MB")
 
         # Descargar el video con mensajes de progreso
         downloaded_path = await self._download_with_progress(message, file_info, reason)
@@ -348,6 +349,28 @@ class MediaForwardHandler:
                 Button.inline("Descartar", b"discard")
             ],
             [
+                Button.inline("Borrar archivo", b"delete_file")
+            ]
+        ]
+
+        sent_message = await self.client.send_file(
+            self.config.chat_me, 
+            file=message.media, 
+            caption=caption,
+            buttons=buttons
+        )
+        
+        return sent_message
+    
+    async def _replay_long_video_with_buttons(self, message, caption=None):
+        # Send long video with additional button for creating new clips
+        buttons = [
+            [
+                Button.inline("Enviar al chat destino", b"send_to_target"),
+                Button.inline("Descartar", b"discard")
+            ],
+            [
+                Button.inline("Crear nuevos clips", b"create_new_clips"),
                 Button.inline("Borrar archivo", b"delete_file")
             ]
         ]
