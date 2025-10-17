@@ -29,17 +29,18 @@ class MediaForwardHandler:
             try:
                 message_type = self._determine_message_type(event.message)
                 if message_type in [ 'video', 'animation']:
-                   await self._process_video(event.message)
+                    await self._process_video(event.message)
                 elif message_type in ['image']:
-                    await self._process_image(event.message)
+                    if getattr(self.config, 'image_processing_enabled', True):
+                        await self._process_image(event.message)
+                    else:
+                        await self.messenger.send_notification_to_me("Procesamiento de imágenes desactivado por configuración.", parse_mode='md')
                 elif message_type == 'text':
                     await self.messenger.send_notification_to_me("recuperamos un texto", parse_mode='md')
                 elif message_type == 'sticker':
                     await self.messenger.send_notification_to_me("recuperamos un sticker", parse_mode='md')
                 else:
                     await self.messenger.send_notification_to_me("recuperamos otro tipo de mensaje", parse_mode='md')
-                         
-              
             except Exception as e:
                 self.logger.error(f"Error handling message: {e}")
 

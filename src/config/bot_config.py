@@ -36,7 +36,8 @@ class BotConfig:
         self.data_dir = os.getenv('DATA_DIR', 'data')
         self.logs_dir = os.getenv('LOGS_DIR', 'logs')
         self.downloads_dir = os.getenv('DOWNLOADS_DIR', 'downloads')
-        
+        # Activar/desactivar tratamiento de imágenes
+        self.image_processing_enabled = os.getenv('IMAGE_PROCESSING_ENABLED', 'true').lower() == 'true'
         # Configuración de logging
         self.log_level = os.getenv('LOG_LEVEL', 'INFO')
         self.log_file = os.getenv('LOG_FILE', 'logs/bot.log')
