@@ -2,7 +2,8 @@ import asyncio
 import os
 import torch
 from PIL import Image
-from transformers import pipeline, AutoProcessor, AutoModelForVision2Seq, AutoTokenizer, BlipProcessor, BlipForConditionalGeneration
+from transformers import pipeline, AutoProcessor, BlipProcessor, BlipForConditionalGeneration
+from transformers import LlavaForConditionalGeneration
 from openai import OpenAI
 from huggingface_hub import InferenceClient
 from src.config import setup_logger
