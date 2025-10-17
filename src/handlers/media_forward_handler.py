@@ -395,7 +395,10 @@ class MediaForwardHandler:
         
         for i in range(num_clips):
             self.logger.info(f"Creando clip {i+1}/{num_clips} de {clip_duration} segundos...")
-            clip_path = downloaded_path.replace('.mp4', f'_clip_0{i}.mp4')
+            # Crear nombre único para el clip
+            base_name = os.path.splitext(downloaded_path)[0]  # Nombre sin extensión
+            extension = os.path.splitext(downloaded_path)[1]   # Extensión con punto
+            clip_path = f"{base_name}_clip_{i:02d}{extension}"
             success, result = await self.file_manager.create_random_video_clip(
                 input_path=downloaded_path,
                 output_path=clip_path,
