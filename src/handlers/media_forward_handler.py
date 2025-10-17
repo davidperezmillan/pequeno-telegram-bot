@@ -29,17 +29,18 @@ class MediaForwardHandler:
             try:
                 message_type = self._determine_message_type(event.message)
                 if message_type in [ 'video', 'animation']:
-                   await self._process_video(event.message)
+                    await self._process_video(event.message)
                 elif message_type in ['image']:
-                    await self._process_image(event.message)
+                    if getattr(self.config, 'image_processing_enabled', True):
+                        await self._process_image(event.message)
+                    else:
+                        await self.messenger.send_notification_to_me("Procesamiento de imágenes desactivado por configuración.", parse_mode='md')
                 elif message_type == 'text':
                     await self.messenger.send_notification_to_me("recuperamos un texto", parse_mode='md')
                 elif message_type == 'sticker':
                     await self.messenger.send_notification_to_me("recuperamos un sticker", parse_mode='md')
                 else:
                     await self.messenger.send_notification_to_me("recuperamos otro tipo de mensaje", parse_mode='md')
-                         
-              
             except Exception as e:
                 self.logger.error(f"Error handling message: {e}")
 
@@ -276,7 +277,7 @@ class MediaForwardHandler:
         """
         # Enviar mensaje inicial de descarga
         progress_message = await self.messenger.send_notification_to_me(
-            f"📥 Iniciando descarga...\n📊 Tamaño: {file_info['file_size'] / (1024*1024):.1f}MB\n📝 {reason}", 
+            f"📥 Iniciando descarga...\n📊 Tamaño: {file_info['file_size'] / (1024*1024):.1f}MB\n📝 {reason}\n🔗 Origen: Mensaje {message.id} en chat {message.chat_id}", 
             parse_mode='md'
         )
         
@@ -289,7 +290,7 @@ class MediaForwardHandler:
                     try:
                         await self.messenger.edit_message(
                             progress_message.id,
-                            f"📥 Descargando...\n📊 Progreso: {percentage:.1f}%\n📏 {current/(1024*1024):.1f}MB / {total/(1024*1024):.1f}MB\n📝 {reason}",
+                            f"📥 Descargando...\n📊 Progreso: {percentage:.1f}%\n📏 {current/(1024*1024):.1f}MB / {total/(1024*1024):.1f}MB\n📝 {reason}\n🔗 Origen: Mensaje {message.id} en chat {message.chat_id}",
                             chat_id=self.config.chat_me,
                             parse_mode='md'
                         )
@@ -311,7 +312,7 @@ class MediaForwardHandler:
             try:
                 await self.messenger.edit_message(
                     progress_message.id,
-                    f"❌ Error al descargar archivo\n📊 Tamaño: {file_info['file_size'] / (1024*1024):.1f}MB\n📝 {reason}",
+                    f"❌ Error al descargar archivo\n📊 Tamaño: {file_info['file_size'] / (1024*1024):.1f}MB\n📝 {reason}\n🔗 Origen: Mensaje {message.id} en chat {message.chat_id}",
                     chat_id=self.config.chat_me,
                     parse_mode='md'
                 )
@@ -444,9 +445,14 @@ class MediaForwardHandler:
         # - 50-60% (mitad)
         # - 75-80% (último cuarto)
         # - 90-100% (final)
-        if (percentage >= 25 and percentage < 26) or \
+        if (percentage >= 20 and percentage < 21) or \
+           (percentage >= 30 and percentage < 31) or \
+           (percentage >= 40 and percentage < 41) or \
            (percentage >= 50 and percentage < 51) or \
-           (percentage >= 75 and percentage < 76) or \
-           (percentage >= 98 and percentage < 100):
+           (percentage >= 60 and percentage < 61) or \
+           (percentage >= 70 and percentage < 71) or \
+           (percentage >= 80 and percentage < 81) or \
+           (percentage >= 90 and percentage < 91) or \
+           (percentage >= 99 and percentage < 100):
             return True
         return False

@@ -11,6 +11,7 @@ services:
       - CHAT_TARGET=${CHAT_TARGET}  # Chat objetivo donde el bot enviará contenido
       - MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB} # Tamaño máximo de archivo en MB
       - LOG_LEVEL=${LOG_LEVEL}        # Nivel de logging
+      - IMAGE_PROCESSING_ENABLED=${IMAGE_PROCESSING_ENABLED} # Activar/desactivar tratamiento de imágenes
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs

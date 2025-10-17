@@ -2,7 +2,8 @@ import asyncio
 import os
 import torch
 from PIL import Image
-from transformers import pipeline, AutoProcessor, AutoModelForVision2Seq, AutoTokenizer, BlipProcessor, BlipForConditionalGeneration
+from transformers import pipeline, AutoProcessor, BlipProcessor, BlipForConditionalGeneration
+from transformers import LlavaForConditionalGeneration
 from openai import OpenAI
 from huggingface_hub import InferenceClient
 from src.config import setup_logger
@@ -259,11 +260,11 @@ class ImageDescriptionService:
             processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-large")
             model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-large")
 
-            image = Image.open(image_path)
-
-            text = "Write a long description for this image in a colloquial and dirty tone."
+            image = Image.open(image_path).convert('RGB')
+         
+            text = "a photography of"
             # Generate description
-            inputs = processor(image, return_tensors="pt")
+            inputs = processor(image, text, return_tensors="pt")
             # Genera la caption con parámetros para mayor longitud y diversidad
             outputs = model.generate(
                 **inputs,
