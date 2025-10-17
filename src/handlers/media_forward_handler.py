@@ -68,7 +68,8 @@ class MediaForwardHandler:
         sent_message = await self._replay_with_buttons(message, caption="🖼️ Procesando imagen...")
 
         # Download the image
-        downloaded_path = await self.messenger.download_media_from_message(message)
+        file_name = file_info.get('file_name') if file_info else None
+        downloaded_path = await self.messenger.download_media_from_message(message, file_name=file_name)
         
         if not downloaded_path:
             self.logger.error("Error al descargar la imagen")
@@ -302,9 +303,11 @@ class MediaForwardHandler:
         
         # Descargar el archivo con callback de progreso
         self.logger.info(f"Descargando archivo: {reason}")
+        file_name = file_info.get('file_name') if file_info else None
         downloaded_path = await self.messenger.download_media_from_message(
             message, 
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
+            file_name=file_name
         )
         
         if not downloaded_path:
