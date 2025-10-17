@@ -588,7 +588,8 @@ class TelegramMessenger:
         self,
         message: Any,
         download_dir: Optional[Union[str, Path]] = None,
-        progress_callback: Optional[callable] = None
+        progress_callback: Optional[callable] = None,
+        file_name: Optional[str] = None
     ) -> Optional[str]:
         """
         Descargar multimedia de un mensaje sin importar el tamaño
@@ -597,6 +598,7 @@ class TelegramMessenger:
             message: Mensaje de Telegram que contiene multimedia
             download_dir: Directorio donde descargar (usa /app/downloads por defecto)
             progress_callback: Función opcional para reportar progreso
+            file_name: Nombre personalizado para el archivo (opcional)
             
         Returns:
             Ruta del archivo descargado o None si falló
@@ -611,13 +613,31 @@ class TelegramMessenger:
             target_dir.mkdir(parents=True, exist_ok=True)
             
             # Generar nombre único para el archivo
-            timestamp = asyncio.get_event_loop().time()
-            base_name = f"media_{message.id}_{int(timestamp)}"
-            
-            # Determinar extensión basada en el tipo de media
-            file_extension = self._get_media_extension(message.media)
-            file_name = f"{base_name}{file_extension}"
-            file_path = target_dir / file_name
+            if file_name:
+                # Usar nombre proporcionado, manejar conflictos con sufijos numéricos
+                base_name = Path(file_name).stem
+                extension = Path(file_name).suffix or self._get_media_extension(message.media)
+                
+                # Verificar si el archivo ya existe y añadir sufijo si es necesario
+                counter = 0
+                while True:
+                    if counter == 0:
+                        candidate_name = f"{base_name}{extension}"
+                    else:
+                        candidate_name = f"{base_name} ({counter}){extension}"
+                    
+                    file_path = target_dir / candidate_name
+                    if not file_path.exists():
+                        file_name = candidate_name
+                        break
+                    counter += 1
+            else:
+                # Generar nombre automático
+                timestamp = asyncio.get_event_loop().time()
+                base_name = f"media_{message.id}_{int(timestamp)}"
+                file_extension = self._get_media_extension(message.media)
+                file_name = f"{base_name}{file_extension}"
+                file_path = target_dir / file_name
             
             self.logger.info(f"📥 Descargando multimedia: {file_name}")
             
