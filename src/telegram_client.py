@@ -614,19 +614,30 @@ class TelegramMessenger:
             
             # Generar nombre único para el archivo
             if file_name:
-                # Usar nombre proporcionado, agregar timestamp si ya existe
+                # Usar nombre proporcionado, manejar conflictos con sufijos numéricos
                 base_name = Path(file_name).stem
                 extension = Path(file_name).suffix or self._get_media_extension(message.media)
-                timestamp = asyncio.get_event_loop().time()
-                file_name = f"{base_name}_{int(timestamp)}{extension}"
+                
+                # Verificar si el archivo ya existe y añadir sufijo si es necesario
+                counter = 0
+                while True:
+                    if counter == 0:
+                        candidate_name = f"{base_name}{extension}"
+                    else:
+                        candidate_name = f"{base_name} ({counter}){extension}"
+                    
+                    file_path = target_dir / candidate_name
+                    if not file_path.exists():
+                        file_name = candidate_name
+                        break
+                    counter += 1
             else:
                 # Generar nombre automático
                 timestamp = asyncio.get_event_loop().time()
                 base_name = f"media_{message.id}_{int(timestamp)}"
                 file_extension = self._get_media_extension(message.media)
                 file_name = f"{base_name}{file_extension}"
-            
-            file_path = target_dir / file_name
+                file_path = target_dir / file_name
             
             self.logger.info(f"📥 Descargando multimedia: {file_name}")
             
