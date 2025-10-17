@@ -277,7 +277,7 @@ class MediaForwardHandler:
         """
         # Enviar mensaje inicial de descarga
         progress_message = await self.messenger.send_notification_to_me(
-            f"📥 Iniciando descarga...\n📊 Tamaño: {file_info['file_size'] / (1024*1024):.1f}MB\n📝 {reason}", 
+            f"📥 Iniciando descarga...\n📊 Tamaño: {file_info['file_size'] / (1024*1024):.1f}MB\n📝 {reason}\n🔗 Origen: Mensaje {message.id} en chat {message.chat_id}", 
             parse_mode='md'
         )
         
@@ -290,7 +290,7 @@ class MediaForwardHandler:
                     try:
                         await self.messenger.edit_message(
                             progress_message.id,
-                            f"📥 Descargando...\n📊 Progreso: {percentage:.1f}%\n📏 {current/(1024*1024):.1f}MB / {total/(1024*1024):.1f}MB\n📝 {reason}",
+                            f"📥 Descargando...\n📊 Progreso: {percentage:.1f}%\n📏 {current/(1024*1024):.1f}MB / {total/(1024*1024):.1f}MB\n📝 {reason}\n🔗 Origen: Mensaje {message.id} en chat {message.chat_id}",
                             chat_id=self.config.chat_me,
                             parse_mode='md'
                         )
@@ -312,7 +312,7 @@ class MediaForwardHandler:
             try:
                 await self.messenger.edit_message(
                     progress_message.id,
-                    f"❌ Error al descargar archivo\n📊 Tamaño: {file_info['file_size'] / (1024*1024):.1f}MB\n📝 {reason}",
+                    f"❌ Error al descargar archivo\n📊 Tamaño: {file_info['file_size'] / (1024*1024):.1f}MB\n📝 {reason}\n🔗 Origen: Mensaje {message.id} en chat {message.chat_id}",
                     chat_id=self.config.chat_me,
                     parse_mode='md'
                 )
