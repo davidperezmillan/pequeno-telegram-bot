@@ -303,6 +303,7 @@ class MediaForwardHandler:
         
         # Descargar el archivo con callback de progreso
         self.logger.info(f"Descargando archivo: {reason}")
+        self.logger.info(f"info del archivo: {file_info}")
         file_name = file_info.get('file_name') if file_info else None
         downloaded_path = await self.messenger.download_media_from_message(
             message, 
@@ -449,13 +450,10 @@ class MediaForwardHandler:
         # - 75-80% (último cuarto)
         # - 90-100% (final)
         if (percentage >= 20 and percentage < 21) or \
-           (percentage >= 30 and percentage < 31) or \
            (percentage >= 40 and percentage < 41) or \
            (percentage >= 50 and percentage < 51) or \
            (percentage >= 60 and percentage < 61) or \
-           (percentage >= 70 and percentage < 71) or \
            (percentage >= 80 and percentage < 81) or \
-           (percentage >= 90 and percentage < 91) or \
            (percentage >= 99 and percentage < 100):
             return True
         return False
