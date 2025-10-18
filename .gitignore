@@ -141,6 +141,7 @@ data/
 
 # Descargas
 downloads/
+detections/
 
 # Archivos temporales
 tmp/
