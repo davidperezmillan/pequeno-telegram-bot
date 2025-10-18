@@ -271,9 +271,9 @@ Hora: {event.date}
                     event.message.id
                 )
         
-        @self.client.on(events.NewMessage(pattern=r'/analyze_last_video'))
+        @self.client.on(events.NewMessage(pattern=r'/alv'))
         async def analyze_last_video_command(event):
-            """Comando /analyze_last_video - Analiza el último video guardado"""
+            """Comando /alv - Analiza el último video guardado"""
             try:
                 # Find the last video file in downloads
                 downloads_dir = "/app/downloads"
