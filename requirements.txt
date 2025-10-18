@@ -12,6 +12,8 @@ numpy<2
 sentencepiece==0.1.99
 huggingface_hub==0.19.4
 openai>=1.0.0
+opencv-python==4.8.1.78
+timm==0.9.12
 
 
 
