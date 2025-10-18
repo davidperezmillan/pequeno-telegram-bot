@@ -1,7 +1,7 @@
 services:
  pequeno_bot:
     build: .
-    container_name: pequeno_bot
+    container_name: ${CONTAINER_NAME}
     restart: unless-stopped
     environment:
       - API_ID=${API_ID}
@@ -12,10 +12,12 @@ services:
       - MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB} # Tamaño máximo de archivo en MB
       - LOG_LEVEL=${LOG_LEVEL}        # Nivel de logging
       - IMAGE_PROCESSING_ENABLED=${IMAGE_PROCESSING_ENABLED} # Activar/desactivar tratamiento de imágenes
+      - HF_TOKEN=${HF_TOKEN}         # Token de Hugging Face para modelos privados
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
       - ${DOWNLOADS_DIR}:/app/downloads
+      - ./detections:/app/detections
     networks:
       - pequeno-bot-net
 

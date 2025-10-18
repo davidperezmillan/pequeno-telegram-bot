@@ -30,15 +30,19 @@ class MediaForwardHandler:
                 message_type = self._determine_message_type(event.message)
                 if message_type in [ 'video', 'animation']:
                     await self._process_video(event.message)
+
                 elif message_type in ['image']:
                     if getattr(self.config, 'image_processing_enabled', True):
                         await self._process_image(event.message)
                     else:
                         await self.messenger.send_notification_to_me("Procesamiento de imágenes desactivado por configuración.", parse_mode='md')
+                
                 elif message_type == 'text':
                     await self.messenger.send_notification_to_me("recuperamos un texto", parse_mode='md')
+
                 elif message_type == 'sticker':
-                    await self.messenger.send_notification_to_me("recuperamos un sticker", parse_mode='md')
+                    await self._process_sticker(event.message)
+
                 else:
                     await self.messenger.send_notification_to_me("recuperamos otro tipo de mensaje", parse_mode='md')
             except Exception as e:
@@ -57,8 +61,6 @@ class MediaForwardHandler:
 
         # Delete the video from the original chat
         await self.messenger.delete_message(message.id,message.chat_id)
-
-    
 
     async def _process_image(self, message):
         """Process image messages."""
@@ -135,7 +137,43 @@ class MediaForwardHandler:
         # Delete the image from the original chat
         await self.messenger.delete_message(message.id, message.chat_id)
 
-    
+    async def _process_sticker(self, message):
+        """Process sticker messages."""
+        try:
+            # Get file info
+            file_info = self._get_file_info(message)
+            
+            # Download the sticker
+            file_name = file_info.get('file_name') if file_info else None
+            downloaded_path = await self.messenger.download_media_from_message(message, file_name=file_name)
+            
+            if not downloaded_path:
+                self.logger.error("Error al descargar el sticker")
+                await self.messenger.send_notification_to_me("❌ Error al descargar sticker", parse_mode='md')
+                return
+            
+            self.logger.info(f"Sticker descargado: {downloaded_path}")
+            
+            # Send sticker with buttons to the user's chat
+            sent_message = await self._replay_sticker_with_buttons(message, downloaded_path)
+            
+            # Save the file path to the sent message in database
+            message_obj = Message(
+                message_id=sent_message.id,
+                chat_id=sent_message.chat_id,
+                user_id=self.config.chat_me,
+                message_type='sticker',
+                media_info={'file_path': downloaded_path},
+                created_at=sent_message.date
+            )
+            self.db_manager.save_message(message_obj)
+            
+            # Delete the sticker from the original chat
+            await self.messenger.delete_message(message.id, message.chat_id)
+            
+        except Exception as e:
+            self.logger.error(f"Error processing sticker: {e}")
+            await self.messenger.send_notification_to_me(f"❌ Error procesando sticker: {str(e)}", parse_mode='md')
 
     async def _process_long_video(self, message, file_info, reason):
 
@@ -288,6 +326,7 @@ class MediaForwardHandler:
                 percentage = (current / total) * 100
                 self.logger.debug(f"Progreso de descarga: {percentage:.1f}% ({current}/{total} bytes)")
                 if self._send_notif_process(percentage):
+                    self.logger.info(f"Progreso de descarga: {percentage:.1f}% ({current}/{total} bytes)")
                     try:
                         await self.messenger.edit_message(
                             progress_message.id,
@@ -354,6 +393,7 @@ class MediaForwardHandler:
                 Button.inline("Descartar", b"discard")
             ],
             [
+                Button.inline("Descargar y crear clips", b"download_and_create_clips"),
                 Button.inline("Borrar archivo", b"delete_file")
             ]
         ]
@@ -389,10 +429,33 @@ class MediaForwardHandler:
         
         return sent_message
     
+    async def _replay_sticker_with_buttons(self, message, file_path):
+        """Send sticker with buttons to the user's chat."""
+        buttons = [
+            [
+                Button.inline("Enviar al chat destino", b"send_to_target"),
+                Button.inline("Descartar", b"discard")
+            ],
+            [
+                Button.inline("Borrar archivo", b"delete_file")
+            ]
+        ]
+
+        sent_message = await self.client.send_file(
+            self.config.chat_me, 
+            file=file_path,
+            caption="🎭 Sticker recibido",
+            buttons=buttons
+        )
+        
+        return sent_message
+    
     async def create_clips(self, downloaded_path,num_clips=3, clip_duration=10):
         lClip_path = []
         clips_creados = 0
         
+
+
         for i in range(num_clips):
             self.logger.info(f"Creando clip {i+1}/{num_clips} de {clip_duration} segundos...")
             # Crear nombre único para el clip
@@ -410,7 +473,13 @@ class MediaForwardHandler:
                 clips_creados += 1
                 self.logger.info(f"Clip {i+1}/3 creado exitosamente: {result}")
 
-                # enviar cada clip individualmente (opcional)
+                # Enviar mensaje de progreso
+                progress_message = await self.client.send_message(
+                    self.config.chat_me, 
+                    f"Creando clip {i+1}/{num_clips}..."
+                )
+
+                # Enviar el clip como respuesta al mensaje de progreso
                 try:
                     buttons = [
                         [
@@ -422,8 +491,16 @@ class MediaForwardHandler:
                     sent_message = await self.client.send_file(
                         self.config.chat_me,
                         file=result,
+                        reply_to=progress_message.id,
                         parse_mode='markdown',
                         buttons=buttons
+                    )
+                    
+                    # Editar el mensaje de progreso para confirmar
+                    await self.client.edit_message(
+                        progress_message.chat_id,
+                        progress_message.id,
+                        text=f"✅ Clip {i+1}/{num_clips} creado y enviado."
                     )
                     
                     # Save message with file path to database
@@ -439,7 +516,16 @@ class MediaForwardHandler:
                     
                     self.logger.info(f"Clip {i+1}/3 enviado exitosamente a chat_me")
                 except Exception as e:
-                    self.logger.error(f"Error enviando clip {i+1}/3 a chat_me: {e}")    
+                    self.logger.error(f"Error enviando clip {i+1}/3 a chat_me: {e}")
+                    # Editar mensaje de progreso en caso de error
+                    try:
+                        await self.client.edit_message(
+                            progress_message.chat_id,
+                            progress_message.id,
+                            text=f"❌ Error enviando clip {i+1}/{num_clips}."
+                        )
+                    except:
+                        pass    
 
             else:
                 self.logger.error(f"Error creando clip {i+1}/3: {result}")
