@@ -6,9 +6,6 @@ from telethon import events
 from src.config import setup_logger
 from src.database import DatabaseManager
 from src.telegram_client import TelegramMessenger
-from src.utils.video_analyzer import analyze_video
-import os
-import glob
 
 
 class CommandHandler:
@@ -268,78 +265,5 @@ Hora: {event.date}
                 self.logger.error(f"Error en comando /send_notification: {e}")
                 await self.messenger.reply_to_message(
                     "❌ Error enviando notificación",
-                    event.message.id
-                )
-        
-        @self.client.on(events.NewMessage(pattern=r'/alv'))
-        async def analyze_last_video_command(event):
-            """Comando /alv - Analiza el último video guardado"""
-            try:
-                # Find the last video file in downloads
-                downloads_dir = "/app/downloads"
-                video_files = glob.glob(os.path.join(downloads_dir, "*.mp4")) + \
-                             glob.glob(os.path.join(downloads_dir, "*.avi")) + \
-                             glob.glob(os.path.join(downloads_dir, "*.mov")) + \
-                             glob.glob(os.path.join(downloads_dir, "*.mkv"))
-                
-                if not video_files:
-                    await self.messenger.reply_to_message(
-                        "❌ No se encontraron videos en la carpeta downloads",
-                        event.message.id
-                    )
-                    return
-                
-                # Get the most recent video
-                last_video = max(video_files, key=os.path.getmtime)
-                
-                await self.messenger.reply_to_message(
-                    f"🔍 Analizando video: {os.path.basename(last_video)}",
-                    event.message.id
-                )
-                
-                # Run analysis
-                persons, nsfw = analyze_video(last_video)
-                
-                # Send results
-                result_msg = f"📊 Resultados del análisis:\n"
-                result_msg += f"👥 Personas detectadas: {'Sí' if persons else 'No'}\n"
-                result_msg += f"🔞 Contenido NSFW: {'Sí' if nsfw else 'No'}"
-                
-                await self.messenger.reply_to_message(result_msg, event.message.id)
-                
-                # Send saved images
-                detections_dir = "/app/detections"
-                if os.path.exists(detections_dir):
-                    image_files = glob.glob(os.path.join(detections_dir, "*.png"))
-                    if image_files:
-                        # Sort by modification time, most recent first
-                        image_files.sort(key=os.path.getmtime, reverse=True)
-                        
-                        for img_path in image_files[:3]:  # Send up to 10 images
-                            try:
-                                await self.client.send_file(
-                                    event.chat_id,
-                                    img_path,
-                                    caption=os.path.basename(img_path)
-                                )
-                            except Exception as e:
-                                self.logger.error(f"Error sending image {img_path}: {e}")
-                    else:
-                        await self.messenger.reply_to_message(
-                            "📷 No se encontraron imágenes guardadas",
-                            event.message.id
-                        )
-                else:
-                    await self.messenger.reply_to_message(
-                        "📷 No se encontró la carpeta de detecciones",
-                        event.message.id
-                    )
-                
-                self.logger.info(f"Comando /analyze_last_video ejecutado por usuario {event.sender_id}")
-                
-            except Exception as e:
-                self.logger.error(f"Error en comando /analyze_last_video: {e}")
-                await self.messenger.reply_to_message(
-                    f"❌ Error analizando video: {str(e)}",
                     event.message.id
                 )
