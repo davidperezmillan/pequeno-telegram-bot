@@ -36,7 +36,8 @@ class MediaForwardHandler:
                         await self.messenger.send_notification_to_me("Procesamiento de imágenes desactivado por configuración.", parse_mode='md')
                 
                 elif message_type == 'text':
-                    await self.messenger.send_notification_to_me("recuperamos un texto", parse_mode='md')
+                    # await self.messenger.send_notification_to_me("recuperamos un texto", parse_mode='md')
+                    pass
 
                 elif message_type == 'sticker':
                     await self._process_sticker(event.message)
@@ -479,7 +480,13 @@ class MediaForwardHandler:
                         created_at=sent_message.date
                     )
                     self.db_manager.save_message(message_obj)
-                    
+
+                    ## borrar mensaje de progreso después de enviar el clip
+                    try:
+                        await self.messenger.delete_message(progress_message.id, progress_message.chat_id)
+                    except Exception as e:
+                        self.logger.error(f"Error borrando mensaje de progreso para clip {i+1}/3: {e}")
+
                     self.logger.info(f"Clip {i+1}/3 enviado exitosamente a chat_me")
                 except Exception as e:
                     self.logger.error(f"Error enviando clip {i+1}/3 a chat_me: {e}")

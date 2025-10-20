@@ -21,12 +21,12 @@ class pequenoBot:
         # Crear cliente de Telethon usando la configuración
         self.client = TelegramClient('pequeno_bot_session', self.config.api_id, self.config.api_hash)
         
+        # inicializar commend
+        self.command_handler = CommandHandler(self.client, self.config)
+
         # Inicializar handlers
         self.info_handler = InfoHandler(self.client, self.config)
         self.media_forward_handler = MediaForwardHandler(self.client, self.config)
-
-        # inicializar commend
-        self.command_handler = CommandHandler(self.client, self.config)
 
         # inicializar callback
         self.callback_handler = CallbackHandler(self.client, self.config, self.media_forward_handler)
