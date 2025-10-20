@@ -134,8 +134,6 @@ class CallbackHandler:
                             await event.answer(f"✅ {clips_creados} clips creados y enviados.")
                             self.logger.info(f"Downloaded and created {clips_creados} clips from short video")
                             
-                            # Delete the original message
-                            await original_message.delete()
                         except Exception as e:
                             self.logger.error(f"Error downloading and creating clips: {e}")
                             await event.answer("❌ Error al procesar el video.")
