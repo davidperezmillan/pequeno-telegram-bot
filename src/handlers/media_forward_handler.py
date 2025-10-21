@@ -425,6 +425,11 @@ class MediaForwardHandler:
 
         for i in range(num_clips):
             self.logger.info(f"Creando clip {i+1}/{num_clips} de {clip_duration} segundos...")
+            # Enviar mensaje de progreso
+            progress_message = await self.client.send_message(
+                self.config.chat_me, 
+                f"Creando clip {i+1}/{num_clips}..."
+            )            
             # Crear nombre único para el clip
             base_name = os.path.splitext(downloaded_path)[0]  # Nombre sin extensión
             extension = os.path.splitext(downloaded_path)[1]   # Extensión con punto
@@ -439,12 +444,6 @@ class MediaForwardHandler:
                 lClip_path.append(result)
                 clips_creados += 1
                 self.logger.info(f"Clip {i+1}/3 creado exitosamente: {result}")
-
-                # Enviar mensaje de progreso
-                progress_message = await self.client.send_message(
-                    self.config.chat_me, 
-                    f"Creando clip {i+1}/{num_clips}..."
-                )
 
                 # Enviar el clip como respuesta al mensaje de progreso
                 try:
