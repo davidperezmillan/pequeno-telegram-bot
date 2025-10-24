@@ -23,6 +23,16 @@ class MediaForwardHandler:
 
         @self.client.on(events.NewMessage(incoming=True))
         async def handle_incoming_message(event):
+            """
+            Trazar de donde vienen los mensajes id, id del chat, tipo de mensaje, origen, renviado o no#
+            """
+            message_info = {
+                'message_id': event.message.id,
+                'chat_id': event.message.chat_id,
+                'is_forwarded': event.message.fwd_from is not None
+            }
+            self.logger.info(f"Mensaje recibido: {message_info}")
+
             """Handle incoming messages and forward them if necessary."""
             try:
                 message_type = self._determine_message_type(event.message)
@@ -458,6 +468,7 @@ class MediaForwardHandler:
                         self.config.chat_me,
                         file=result,
                         reply_to=progress_message.id,
+                        caption="🎬 Clip generado automáticamente",
                         parse_mode='markdown',
                         buttons=buttons
                     )
